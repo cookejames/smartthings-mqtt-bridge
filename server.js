@@ -6,7 +6,7 @@ var winston = require('winston'),
     expressJoi = require('express-joi-validator'),
     expressWinston = require('express-winston'),
     bodyparser = require('body-parser'),
-    mqtt = require('mqtt'),
+    awsIot = require('aws-iot-device-sdk'),
     async = require('async'),
     path = require('path'),
     url = require('url'),
@@ -121,11 +121,6 @@ function migrateState (version) {
     // Default port
     if (!config.port) {
         config.port = 8080;
-    }
-
-    // Default protocol
-    if (!url.parse(config.mqtt.host).protocol) {
-        config.mqtt.host = 'mqtt://' + config.mqtt.host;
     }
 
     // Stuff was previously in subscription.json, load that and migrate it
@@ -306,7 +301,7 @@ async.series([
     function connectToMQTT (next) {
         winston.info('Connecting to MQTT at %s', config.mqtt.host);
 
-        client = mqtt.connect(config.mqtt.host, config.mqtt);
+        client = awsIot.device(config.mqtt);
         client.on('message', parseMQTTMessage);
         client.on('connect', function () {
             if (subscriptions.length > 0) {
