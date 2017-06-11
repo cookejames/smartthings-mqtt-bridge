@@ -160,7 +160,7 @@ function handlePushEvent (req, res) {
         type: req.body.type,
         value: value
       })),
-      asyncClient.publish(topic, value)
+      // asyncClient.publish(topic, value)
     ]).then(function() {
       res.send({
           status: 'OK'
