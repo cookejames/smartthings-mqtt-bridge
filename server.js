@@ -153,7 +153,7 @@ function handlePushEvent (req, res) {
     history[topic] = value;
 
     client.publish(topic, value, {
-        retain: true
+        retain: false
     }, function () {
         res.send({
             status: 'OK'
