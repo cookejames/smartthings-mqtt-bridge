@@ -7,6 +7,7 @@ var winston = require('winston'),
     expressWinston = require('express-winston'),
     bodyparser = require('body-parser'),
     awsIot = require('aws-iot-device-sdk'),
+    AsyncClient = require("async-mqtt").AsyncClient,
     async = require('async'),
     path = require('path'),
     url = require('url'),
@@ -32,6 +33,7 @@ var CONFIG_DIR = process.env.CONFIG_DIR || process.cwd(),
 
 var app = express(),
     client,
+    asyncClient,
     subscriptions = [],
     callback = '',
     config = {},
@@ -152,13 +154,23 @@ function handlePushEvent (req, res) {
     winston.info('Incoming message from SmartThings: %s = %s', topic, value);
     history[topic] = value;
 
-    client.publish(topic, value, {
-        retain: false
-    }, function () {
-        res.send({
-            status: 'OK'
-        });
-    });
+    Promise.all([
+      asyncClient.publish(config.mqtt.preface, JSON.stringify({
+        name: req.body.name,
+        type: req.body.type,
+        value: value
+      })),
+      asyncClient.publish(topic, value)
+    ]).then(function() {
+      res.send({
+          status: 'OK'
+      });
+    }).catch(function(err) {
+      console.error(err);
+      res.send({
+          status: 'FAILED'
+      });
+    })
 }
 
 /**
@@ -302,6 +314,7 @@ async.series([
         winston.info('Connecting to MQTT at %s', config.mqtt.host);
 
         client = awsIot.device(config.mqtt);
+        asyncClient = new AsyncClient(client);
         client.on('message', parseMQTTMessage);
         client.on('connect', function () {
             if (subscriptions.length > 0) {

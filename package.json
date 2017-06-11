@@ -30,6 +30,7 @@
   "homepage": "https://github.com/stjohnjohnson/smartthings-mqtt-bridge",
   "dependencies": {
     "async": "^1.5.2",
+    "async-mqtt": "^1.0.1",
     "aws-iot-device-sdk": "^1.0.14",
     "body-parser": "^1.14.1",
     "express": "^4.13.3",
